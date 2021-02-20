@@ -1,12 +1,13 @@
 --cpu Cortex-M3
 "mult_power_out\startup_stm32f103xb.o"
+"mult_power_out\oled.o"
 "mult_power_out\main.o"
 "mult_power_out\gpio.o"
 "mult_power_out\adc.o"
+"mult_power_out\dma.o"
 "mult_power_out\tim.o"
 "mult_power_out\usart.o"
 "mult_power_out\usb.o"
-"mult_power_out\wwdg.o"
 "mult_power_out\stm32f1xx_it.o"
 "mult_power_out\stm32f1xx_hal_msp.o"
 "mult_power_out\stm32f1xx_hal_gpio_ex.o"
@@ -28,7 +29,6 @@
 "mult_power_out\stm32f1xx_hal_pcd.o"
 "mult_power_out\stm32f1xx_hal_pcd_ex.o"
 "mult_power_out\stm32f1xx_ll_usb.o"
-"mult_power_out\stm32f1xx_hal_wwdg.o"
 "mult_power_out\system_stm32f1xx.o"
 --library_type=microlib --strict --scatter "Mult_power_out\Mult_power_out.sct"
 --summary_stderr --info summarysizes --map --load_addr_map_info --xref --callgraph --symbols

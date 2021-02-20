@@ -30,13 +30,14 @@ mult_power_out\main.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_pwr.h
 mult_power_out\main.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim.h
 mult_power_out\main.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim_ex.h
 mult_power_out\main.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h
-mult_power_out\main.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_wwdg.h
 mult_power_out\main.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_pcd.h
 mult_power_out\main.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_ll_usb.h
 mult_power_out\main.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_pcd_ex.h
 mult_power_out\main.o: ../Core/Inc/adc.h
+mult_power_out\main.o: ../Core/Inc/dma.h
 mult_power_out\main.o: ../Core/Inc/tim.h
 mult_power_out\main.o: ../Core/Inc/usart.h
 mult_power_out\main.o: ../Core/Inc/usb.h
-mult_power_out\main.o: ../Core/Inc/wwdg.h
 mult_power_out\main.o: ../Core/Inc/gpio.h
+mult_power_out\main.o: ../Core/Inc/oled.h
+mult_power_out\main.o: F:\Keil_v5\ARM\ARMCC\Bin\..\include\stdlib.h
