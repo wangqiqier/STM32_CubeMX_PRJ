@@ -55,9 +55,12 @@
 /* USER CODE BEGIN PV */
 #define ADC_CHANNEL_CNT 8 	//采样通道数
 #define ADC_CHANNEL_FRE 5	//单个通道采样次数，用来取平均值
-uint32_t adc1_val_buf[32]; //传递给DMA存放多通道采样值的数组
+uint32_t adc1_val_buf[8]; //传递给DMA存放多通道采样值的数组
 uint32_t adc1_aver_val[ADC_CHANNEL_CNT] = {0}; //保存多通道的平均采样值的数组
 
+uint32_t ADC_Value[8];
+uint32_t ADC_Va_Sto[8];
+uint32_t ADC_Va[8];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -1095,9 +1098,14 @@ void show_siwei_int_data(int data,unsigned char c, unsigned char d, unsigned cha
 	unsigned char *Src_Pointer;
   unsigned char i,Font,Pick;
 	unsigned char m=0,n=0;	
+	
+	/*** 显示前先刷新要显示的区域****/ 
 
 	if(shuzhi<10)  
-  { Show_Font57_zifu(shuzhi,c,d,e,f); }
+  { 
+		Show_Font57_zifu(shuzhi,c,d,e,f); 
+	
+	}
 	
 	if(  (shuzhi>=10)&&(shuzhi<=99) ) 
   { 
@@ -1120,6 +1128,16 @@ void show_siwei_int_data(int data,unsigned char c, unsigned char d, unsigned cha
 		 Show_Font57_zifu(shuzhi%100/10,c,d,e-5,f);
 		 Show_Font57_zifu(shuzhi%10,c,d,e,f);
     }
+		
+		if(  (shuzhi>=10000)&&(shuzhi<=99099) ) 
+    { 
+		 Show_Font57_zifu(shuzhi/10000,c,d,e-20,f);
+		 Show_Font57_zifu(shuzhi%10000/1000,c,d,e-15,f);
+		 Show_Font57_zifu(shuzhi%1000/100,c,d,e-10,f);
+		Show_Font57_zifu(shuzhi%100/10,c,d,e-5,f);
+		 Show_Font57_zifu(shuzhi%10,c,d,e,f);
+    }
+		
 }
 
 //  Show Character (5x7)
@@ -1611,6 +1629,7 @@ int main(void)
   /* USER CODE BEGIN 1 */
 	int num=0;
   int i=0,j=0;
+	int count=500;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -1633,20 +1652,21 @@ int main(void)
   MX_GPIO_Init();
   MX_DMA_Init();
   MX_ADC1_Init();
-	HAL_ADC_Start_DMA(&hadc1,(uint32_t*) &adc1_val_buf, ADC_CHANNEL_CNT);
-	
   MX_USART1_UART_Init();
   MX_TIM2_Init();
   MX_USB_PCD_Init();
   /* USER CODE BEGIN 2 */
 	OLED_Init();
-	
+		HAL_Delay(1000);
+	HAL_Delay(1000);
+	HAL_ADCEx_Calibration_Start(&hadc1);
+	HAL_ADC_Start_DMA(&hadc1,(uint32_t*)&ADC_Value,8);
 	
 	Fill_RAM(0x00,0x00);		// Clear Screen
 	// 显示格式：第一行字占7行，1&2间隔7行，第二行字占7行，再加12的大间距
 Show_String(1,"12V_Output",0xF8,0x00,0x00,0x00);  //参数1=1的话，直接显示字符串了,使用ASCII码
 //电压显示+电流显示，12V 带小数点
-Show_String(1,"V",0xF8,0x70,25,14); Show_String(1,"mA",0xF8,0x70,57,14); 
+Show_String(1,"mV",0xF8,0x70,28,14); Show_String(1,"mA",0xF8,0x70,62,14); 
 
 Show_String(1,"5V_Output",0x07,0x70,0x00,32);
 Show_String(1,"mV",0xF8,0x70,22,46); Show_String(1,"mA",0xF8,0x70,57,46); 
@@ -1665,51 +1685,76 @@ Show_String(1,"mV",0xF8,0x70,22,110); Show_String(1,"mA",0xF8,0x70,57,110);
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-		for(i=0;i<ADC_CHANNEL_CNT;i++)
+			HAL_ADC_PollForConversion(&hadc1,100);
+			for(j=0;j<8;j++)
+			{
+				ADC_Va_Sto[j]+=ADC_Value[j];
+			}
+		  num++;
+			//printf(" %d   %d   %d \r\n",num,ADC_Value[0],j);
+			
+		if(num==count)
 		{
-			adc1_aver_val[i] = 0;
-		}
+			  for(j=0;j<8;j++)
+				{
+					ADC_Va[j]=ADC_Va_Sto[j]/count;
+					//ADC_Va[j]=ADC_Va_Sto[j];
+				}
+				/*  串口打印显示      */
+				{
+				printf("1.8V 输出 %.3f V ", (float)ADC_Va[0]*3/4096 );   // pin脚实际的电压值
+				printf("%.3f A ", (float)ADC_Va[1]*3/4096 );
+				printf("%.3f W ", ( (float)ADC_Va[1]*3/4096 )*((float)ADC_Va[0]*3/4096));
+				printf("\r\n");
 				
-				/* 在采样值数组中分别取出每个通道的采样值并求和 */
-//		for(i=0;i<ADC_CHANNEL_FRE;i++)
-//		{
-//			adc1_aver_val[0] +=  adc1_val_buf[i*4+0];
-//			adc1_aver_val[1] +=  adc1_val_buf[i*4+1];
-//			adc1_aver_val[2] +=  adc1_val_buf[i*4+2];
-//			adc1_aver_val[3] +=  adc1_val_buf[i*4+3];
-//			adc1_aver_val[4] +=  adc1_val_buf[i*4+4];
-//			adc1_aver_val[5] +=  adc1_val_buf[i*4+5];
-//			adc1_aver_val[6] +=  adc1_val_buf[i*4+6];
-//			adc1_aver_val[7] +=  adc1_val_buf[i*4+7];
-//		}
-//		/* 依次对每个通道采样值求平均值 */
-//		for(i=0;i<ADC_CHANNEL_CNT;i++)
-//		{
-//			adc1_aver_val[i] /=ADC_CHANNEL_FRE;
-//		}
-//		
-//			for(i=0;i<ADC_CHANNEL_CNT;i++)
-//		{
-//			adc1_aver_val[i] = adc1_val_buf[i];
-//		}
+				printf("3.3V 输出 %.3f V ", (float)ADC_Va[2]*4/4096 );
+				printf("%.3f A ", (float)ADC_Va[3]*3/4096 );
+				printf("%.3f W ", ( (float)ADC_Va[2]*4/4096 )*((float)ADC_Va[3]*3/4096));
+				printf("\r\n");
+				
+				printf("5.0V 输出 %.3f V ", (float)ADC_Va[4]*6/4096 );
+				printf("%.3f A ", (float)ADC_Va[5]*3/4096 );
+				printf(" %.3f W ", ( (float)ADC_Va[4]*6/4096 )*((float)ADC_Va[5]*3/4096));
+				printf("\r\n");
+				
+				printf("12V 输出 %.3f V ", (float)ADC_Va[6]*15/4096);
+				printf("%.3f A ", (float)ADC_Va[7]*3/4096 );
+				printf("%.3f W ", ( (float)ADC_Va[6]*15/4096 )*((float)ADC_Va[7]*3/4096));
+				printf("\r\n");	
+				}
+				/*    日志用  一行，有分隔符      */
+				{
+//				printf(" %.3f/", (float)ADC_Va[0]*3/4096 );   // pin脚实际的电压值
+//				printf(" %.3f/", (float)ADC_Va[1]*3/4096 );
+//				printf(" %.3f/", ( (float)ADC_Va[1]*3/4096 )*((float)ADC_Va[0]*3/4096));
+//				
+//				printf(" %.3f/", (float)ADC_Va[2]*4/4096 );
+//				printf(" %.3f/", (float)ADC_Va[3]*3/4096 );
+//				printf(" %.3f/", ( (float)ADC_Va[2]*4/4096 )*((float)ADC_Va[3]*3/4096));
+//				
+//				printf(" %.3f/", (float)ADC_Va[4]*6/4096 );
+//				printf(" %.3f/", (float)ADC_Va[5]*3/4096 );
+//				printf(" %.3f/", ( (float)ADC_Va[4]*6/4096 )*((float)ADC_Va[5]*3/4096));
+//				
+//				printf(" %.3f/", (float)ADC_Va[6]*15/4096);
+//				printf(" %.3f/", (float)ADC_Va[7]*3/4096 );
+//				printf(" %.3f", ( (float)ADC_Va[6]*15/4096 )*((float)ADC_Va[7]*3/4096));
+				}
+				
+				printf("\r\n");
+				show_siwei_int_data(ADC_Va[6]*1875/512,0xff,0x70,20,14); show_siwei_int_data(ADC_Va[7]*375/512,0x07,0xff,55,14);
+				show_siwei_int_data(ADC_Va[4]*375/256,0xff,0x70,15,46); show_siwei_int_data(ADC_Va[5]*375/512,0x07,0xff,50,46);
+				show_siwei_int_data(ADC_Va[2]*125/128,0xff,0x70,15,78); show_siwei_int_data(ADC_Va[3]*375/512,0x07,0xff,50,78);
+				show_siwei_int_data(ADC_Va[0]*375/512,0xff,0x70,15,110); show_siwei_int_data(ADC_Va[1]*375/512,0x07,0xff,50,110);
+					
+					for(i=0;i<8;i++)
+					{
+						ADC_Va_Sto[i]=0;
+					}
+					num=0;
+			}
 		
-			for(i=0;i<ADC_CHANNEL_CNT;i++)
-		{
-			printf("%d->%d  ",i+1,adc1_val_buf[i]);
-		}
-		printf("\r\n");
-		
-		show_siwei_int_data(adc1_aver_val[0],0xff,0x70,15,14); show_siwei_int_data(adc1_aver_val[1],0x07,0xff,50,14);
-		show_siwei_int_data(adc1_aver_val[2],0xff,0x70,15,46); show_siwei_int_data(adc1_aver_val[3],0x07,0xff,50,46);
-		show_siwei_int_data(adc1_aver_val[4],0xff,0x70,15,78); show_siwei_int_data(adc1_aver_val[5],0x07,0xff,50,78);
-		show_siwei_int_data(adc1_aver_val[6],0xff,0x70,15,110); show_siwei_int_data(adc1_aver_val[7],0x07,0xff,50,110);
-		//printf("%d \r\n",num);
-		num++;
-		
-		if(num==10000)
-		{
-			num=0;
-		}
+		//HAL_Delay(1); //ms
 		
     /* USER CODE END WHILE */
 
@@ -1732,8 +1777,8 @@ void SystemClock_Config(void)
   * in the RCC_OscInitTypeDef structure.
   */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
-  RCC_OscInitStruct.HSEState = RCC_HSE_ON;
-  RCC_OscInitStruct.HSEPredivValue = RCC_HSE_PREDIV_DIV2;
+  RCC_OscInitStruct.HSEState = RCC_HSE_BYPASS;
+  RCC_OscInitStruct.HSEPredivValue = RCC_HSE_PREDIV_DIV1;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
