@@ -1651,13 +1651,14 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_DMA_Init();
+	
   MX_ADC1_Init();
   MX_USART1_UART_Init();
   MX_TIM2_Init();
   MX_USB_PCD_Init();
   /* USER CODE BEGIN 2 */
 	OLED_Init();
-		HAL_Delay(1000);
+  HAL_Delay(1000);
 	HAL_Delay(1000);
 	HAL_ADCEx_Calibration_Start(&hadc1);
 	HAL_ADC_Start_DMA(&hadc1,(uint32_t*)&ADC_Value,8);
